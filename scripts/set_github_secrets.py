@@ -37,6 +37,8 @@ SECRET_NAMES = [
     "PA_DOMAIN",
     "OPENAI_API_KEY",
     "OPENAI_MODEL",
+    "ADMIN_USERNAME",
+    "ADMIN_PASSWORD",
 ]
 
 
@@ -60,6 +62,8 @@ def main() -> None:
 
     values = {name: os.environ.get(name, "").strip() for name in SECRET_NAMES}
     to_set = [name for name, value in values.items() if value]
+    if not values["ADMIN_PASSWORD"]:
+        print("УВАГА: ADMIN_PASSWORD порожній — адмінка на сервері буде вимкнена.")
     if not values["PA_USERNAME"] or not values["PA_API_TOKEN"]:
         raise SystemExit("У .env мають бути PA_USERNAME і PA_API_TOKEN")
 

@@ -17,6 +17,9 @@
 Потрібні змінні: PA_USERNAME, PA_API_TOKEN.
 Необов'язкові:   PA_DOMAIN (за замовчуванням <user>.pythonanywhere.com),
                  PA_PROJECT_DIR (за замовчуванням /home/<user>/rag_site),
+                 PA_VENV (за замовчуванням /home/<user>/.virtualenvs/lesson-helper),
+                 PA_DATA_DIR (за замовчуванням /home/<user>/rag_data — БД, завантаження),
+                 ADMIN_USERNAME, ADMIN_PASSWORD (адмінка /admin).
                  OPENAI_API_KEY, OPENAI_MODEL.
 """
 
@@ -44,8 +47,13 @@ from rag.netutil import ssl_context  # noqa: E402
 MANIFEST_PATTERNS = [
     "app.py",
     "rag/*.py",
+    "admin/*.py",
+    "requirements.txt",   # для venv на сервері (див. docs/SETUP.md, крок 8а)
     "data/chunks.json",
+    "data/source/*.html",   # потрібні, щоб адмінка могла перебудувати індекс на сервері
 ]
+# Віртуальне середовище з FastAPI, яке вже є на PythonAnywhere (його не чіпаємо).
+VENV_PROBE = "fastapi-0.116.1.dist-info"
 TEMPLATE = ROOT / "deploy" / "pa_wsgi.py.tmpl"
 
 
@@ -88,6 +96,19 @@ def wait_for_health(domain: str, attempts: int = 12) -> bool:
     return False
 
 
+def check_admin(domain: str) -> str:
+    """Без пароля /admin має відповісти 401 (увімкнено) або 503 (вимкнено)."""
+    try:
+        urllib.request.urlopen(f"https://{domain}/admin", timeout=15, context=ssl_context())
+        return "відповіла без входу — ПЕРЕВІРТЕ НАЛАШТУВАННЯ"
+    except urllib.error.HTTPError as exc:
+        if exc.code == 401:
+            return "працює (потрібен вхід)"
+        return f"HTTP {exc.code} — дивіться Error log"
+    except (urllib.error.URLError, OSError) as exc:
+        return f"недоступна: {exc}"
+
+
 def main() -> None:
     load_env_file(ROOT / ".env")
     parser = argparse.ArgumentParser(description="Деплой RAG на PythonAnywhere")
@@ -101,6 +122,12 @@ def main() -> None:
     project_dir = os.environ.get("PA_PROJECT_DIR", "").strip() or f"/home/{username}/rag_site"
     openai_key = os.environ.get("OPENAI_API_KEY", "").strip()
     openai_model = os.environ.get("OPENAI_MODEL", "").strip() or "gpt-4.1-mini"
+    venv = os.environ.get("PA_VENV", "").strip() or f"/home/{username}/.virtualenvs/lesson-helper"
+    data_dir = os.environ.get("PA_DATA_DIR", "").strip() or f"/home/{username}/rag_data"
+    admin_user = os.environ.get("ADMIN_USERNAME", "").strip() or "admin"
+    admin_password = os.environ.get("ADMIN_PASSWORD", "").strip()
+    if not admin_password:
+        print("УВАГА: ADMIN_PASSWORD не задано — адмінка на сервері вимкнеться.")
 
     check_index()
     local_files = collect_local_files()
@@ -110,6 +137,8 @@ def main() -> None:
     print(f"Веб-апка: {domain}")
     print(f"Папка на сервері: {project_dir}")
     print(f"OpenAI ключ: {'буде записано в .env на сервері' if openai_key else 'не задано (працює режим без моделі)'}")
+    print(f"Адмінка: https://{domain}/admin  (логін {admin_user})")
+    print(f"Дані (БД, завантаження): {data_dir}  — деплой їх не чіпає")
 
     if args.dry_run:
         print("\n--dry-run: на сервері нічого не змінено.")
@@ -126,17 +155,22 @@ def main() -> None:
         client.upload(f"{project_dir}/{rel}", content)
         print(f"завантажено: {rel}")
 
-    # 2) .env на сервері — лише якщо є ключ. Значення не друкуємо.
+    # 2) .env на сервері. Секрети не друкуємо.
+    lines = [
+        f"OPENAI_MODEL={openai_model}",
+        f"RAG_DATA_DIR={data_dir}",
+        f"ADMIN_USERNAME={admin_user}",
+        f"ADMIN_PASSWORD={admin_password}",
+    ]
     if openai_key:
-        env_text = f"OPENAI_API_KEY={openai_key}\nOPENAI_MODEL={openai_model}\n"
-        client.upload(f"{project_dir}/.env", env_text.encode("utf-8"))
-        print("записано: .env (на сервері)")
+        lines.insert(0, f"OPENAI_API_KEY={openai_key}")
+    client.upload(f"{project_dir}/.env", ("\n".join(lines) + "\n").encode("utf-8"))
+    print("записано: .env (на сервері)")
 
     # 3) Видаляємо на сервері зайві файли з попередніх викладок.
     remote_files, _ = client.walk(project_dir)
     wanted = {f"{project_dir}/{rel}" for rel in local_files}
-    if openai_key:
-        wanted.add(f"{project_dir}/.env")  # без ключа старий .env на сервері видаляється
+    wanted.add(f"{project_dir}/.env")
     for remote in remote_files:
         if remote not in wanted and "/__pycache__/" not in remote:
             client.delete_file(remote)
@@ -153,15 +187,21 @@ def main() -> None:
     client.patch_webapp(domain, {
         "source_directory": project_dir,
         "python_version": "3.10",
-        "virtualenv_path": "",
+        "virtualenv_path": venv,
     })
-    print("налаштовано веб-апку")
+    print(f"налаштовано веб-апку (venv: {venv})")
+    try:
+        if VENV_PROBE not in " ".join(client.list_dir(venv + "/lib/python3.10/site-packages/")):
+            print("УВАГА: у venv немає FastAPI; адмінка буде недоступна, бот працюватиме.")
+    except PAError as exc:
+        print(f"УВАГА: не вдалося перевірити venv: {exc}")
 
     # 6) Перезапуск і перевірка.
     client.reload_webapp(domain)
     print("веб-апку перезапущено")
     if not wait_for_health(domain):
         raise SystemExit("Сервер не відповідає на /api/health. Дивіться Web → Error log на PythonAnywhere.")
+    print(f"Адмінка: {check_admin(domain)}")
     print(f"Готово: https://{domain}/")
 
 

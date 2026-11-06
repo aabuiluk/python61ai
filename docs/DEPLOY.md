@@ -29,17 +29,33 @@ push / merge у main
 | Індекс комітиться (`data/chunks.json`) | Сервер не потребує HTML-уроку й не витрачає CPU на побудову індексу |
 | Секрети в GitHub Secrets | У файлах репозиторію секретів немає; значення шифрує GitHub |
 
+## Що деплой чіпає, а що ні
+
+| Частина | Де на сервері | Деплой її змінює? |
+|---|---|---|
+| Код бота і адмінки | `/home/<логін>/rag_site/` | так, повністю перезаписує |
+| `.env` | `/home/<логін>/rag_site/.env` | так, з вашого `.env`/Secrets |
+| Індекс з репозиторію | `rag_site/data/` | так |
+| БД статистики, оцінки, відповіді викладача | `/home/<логін>/rag_data/` | **ні** |
+| Завантажені адміном уроки | `/home/<логін>/rag_data/sources/` | **ні** |
+| venv з FastAPI | `/home/<логін>/.virtualenvs/lesson-helper` | ні (лише читається) |
+
 ## Секрети і де вони живуть
 
 | Де | Що | Видно кому |
 |---|---|---|
 | `.env` на вашому ПК | усі значення | тільки вам |
-| GitHub Secrets | `PA_USERNAME`, `PA_API_TOKEN`, `PA_DOMAIN`, `OPENAI_API_KEY`, `OPENAI_MODEL` | тільки workflow (значення не показуються навіть власнику) |
-| `.env` на PythonAnywhere | лише `OPENAI_API_KEY` і `OPENAI_MODEL` | тільки процесу сайту |
+| GitHub Secrets | `PA_USERNAME`, `PA_API_TOKEN`, `PA_DOMAIN`, `OPENAI_API_KEY`, `OPENAI_MODEL`, `ADMIN_USERNAME`, `ADMIN_PASSWORD` | тільки workflow (значення не показуються навіть власнику) |
+| `.env` на PythonAnywhere | `OPENAI_API_KEY` (якщо є), `OPENAI_MODEL`, `ADMIN_*`, `RAG_DATA_DIR` | тільки процесу сайту |
 | Git-репозиторій | нічого секретного | всі, хто має доступ до репо |
 
 Щоб оновити секрет: змініть `.env` і виконайте `python3 scripts/set_github_secrets.py`.
 Щоб оновити ключ OpenAI на сайті — той самий шлях, потім деплой (пуш або запуск Actions вручну).
+
+## Перевірка після деплою
+
+Скрипт наприкінці перевіряє `/api/health` (бот) і чи `/admin` просить вхід (401).
+Якщо адмінка відповіла без входу або з 503 — дивіться рядок «Адмінка» у логах деплою.
 
 ## Ручний деплой без GitHub
 

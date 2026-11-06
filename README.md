@@ -20,12 +20,14 @@ python3 app.py                                   # http://127.0.0.1:8000
 | Документ | Про що |
 |---|---|
 | [docs/SETUP.md](docs/SETUP.md) | Налаштування з нуля: `.env`, PythonAnywhere, GitHub Secrets, перший деплой — крок за кроком |
+| [docs/ADMIN.md](docs/ADMIN.md) | Адмінка `/admin`: статистика, перевірка людиною, завантаження уроків, налаштування |
 | [docs/DEPLOY.md](docs/DEPLOY.md) | Як працює автодеплой при пуші в `main`, обмеження безплатного тарифу, troubleshooting |
 
 ## Структура
 
 ```
-app.py                       точка входу (локально і на PythonAnywhere)
+app.py                       точка входу: бот і диспетчер /admin
+admin/                       адмінка на FastAPI (окремий модуль)
 rag/                         код RAG: розбиття HTML, BM25, OpenAI, WSGI-застосунок
 data/source/                 HTML-конспект уроку (джерело)
 data/chunks.json             індекс фрагментів (будується з data/source)

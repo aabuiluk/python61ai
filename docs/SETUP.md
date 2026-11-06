@@ -92,6 +92,8 @@ cp .env.example .env          # macOS / Linux
 | `PA_DOMAIN` | `<логін>.pythonanywhere.com`, можна залишити порожнім | ні |
 | `OPENAI_API_KEY` | platform.openai.com → API keys | ні (без нього сайт працює в режимі «лише джерела») |
 | `OPENAI_MODEL` | Модель, яка є у вашому проєкті OpenAI | ні (за замовчуванням `gpt-4.1-mini`) |
+| `ADMIN_USERNAME` | Логін до адмінки `/admin` (за замовчуванням `admin`) | ні |
+| `ADMIN_PASSWORD` | Пароль до адмінки. Згенерований пароль уже в `.env`; при бажанні замініть своїм, довгим | так, інакше адмінка вимкнена |
 
 > **Пароль від PythonAnywhere в `.env` не потрібен.** Скрипти працюють тільки з API-токеном.
 > Пароль вводиться лише у веб-інтерфейсі, і ми його нікуди не зберігаємо.
@@ -241,6 +243,21 @@ git push -u origin my-change     # відкрийте PR і змерджте в 
 Ручний запуск: **Actions → Deploy to PythonAnywhere → Run workflow**.
 
 ---
+
+## Крок 8а. Адмінка
+
+Адреса: `https://csctemplate.pythonanywhere.com/admin`. Логін і пароль — у `.env`
+(`ADMIN_USERNAME`, `ADMIN_PASSWORD`). Опис усіх функцій — [ADMIN.md](ADMIN.md).
+
+Адмінці потрібні пакети FastAPI, які вже є у venv PythonAnywhere
+`lesson-helper`. Якщо venv немає, створіть його в PythonAnywhere (Consoles → Bash):
+
+```bash
+mkdir -p ~/.virtualenvs && python3.10 -m venv ~/.virtualenvs/lesson-helper
+~/.virtualenvs/lesson-helper/bin/pip install -r ~/rag_site/requirements.txt
+```
+
+Без venv бот працює, а `/admin` відповідає 503 з поясненням.
 
 ## Крок 9. Перевірка роботи сайту
 

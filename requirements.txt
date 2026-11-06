@@ -1,0 +1,12 @@
+# Залежності ЛИШЕ для адмінки (/admin) та тестів адмінки.
+# Публічний бот працює без них (стандартна бібліотека).
+# Версії збігаються з тими, що вже стоять у venv PythonAnywhere
+# (/home/<логін>/.virtualenvs/lesson-helper), тому деплой не потребує pip.
+fastapi==0.116.1
+starlette==0.47.3
+pydantic==2.11.7
+pydantic-core==2.33.2
+anyio==4.14.2
+a2wsgi==1.10.10
+python-multipart==0.0.20
+typing-extensions==4.16.0

@@ -5,6 +5,10 @@
 - змінні, які вже задані в середовищі (наприклад, у GitHub Actions),
   важливіші за .env і не перезаписуються;
 - парсер свій, щоб не ставити python-dotenv (нічого зайвого на PythonAnywhere).
+
+Дані, які змінюються під час роботи сайту (БД статистики, завантажені
+файли, зміни налаштувань з адмінки), лежать ПОЗА папкою проєкту — у
+RAG_DATA_DIR. Тоді деплой їх не стирає.
 """
 
 from __future__ import annotations
@@ -12,6 +16,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 
@@ -39,31 +44,49 @@ def load_env_file(path: Path) -> int:
 
 @dataclass(frozen=True)
 class Settings:
-    chunks_path: Path
+    """Налаштування за замовчуванням (з .env/середовища).
+
+    Частину з них адміністратор може змінити в адмінці; тоді діє значення з БД.
+    """
+
+    repo_chunks_path: Path      # data/chunks.json у репозиторії
+    repo_source_dir: Path      # data/source — HTML-уроки
+    data_dir: Path             # RAG_DATA_DIR: БД, завантаження, runtime-індекс
     openai_api_key: str
     openai_model: str
-    use_llm: bool
+    use_llm: bool              # ключ є і прапорець RAG_USE_LLM не вимкнено
     top_k: int
+    llm_per_minute: int
+    admin_username: str
+    admin_password: str
 
 
-def load_settings(env_file: Path | None = None) -> Settings:
+def _int_env(name: str, default: int, low: int, high: int) -> int:
+    raw = os.environ.get(name, "").strip()
+    try:
+        return min(max(int(raw), low), high)
+    except ValueError:
+        return default
+
+
+def load_settings(env_file: Optional[Path] = None) -> Settings:
     """Збирає налаштування з .env (якщо є) і з середовища."""
     load_env_file(env_file or (PROJECT_DIR / ".env"))
 
     api_key = os.environ.get("OPENAI_API_KEY", "").strip()
     use_llm_flag = os.environ.get("RAG_USE_LLM", "1").strip() != "0"
-    top_k_raw = os.environ.get("RAG_TOP_K", "4").strip()
-    try:
-        top_k = min(max(int(top_k_raw), 1), 10)
-    except ValueError:
-        top_k = 4
+    data_dir = Path(os.environ.get("RAG_DATA_DIR", "").strip()
+                    or str(PROJECT_DIR / "runtime_data"))
 
     return Settings(
-        chunks_path=Path(os.environ.get("RAG_CHUNKS_PATH",
-                                        str(PROJECT_DIR / "data" / "chunks.json"))),
+        repo_chunks_path=PROJECT_DIR / "data" / "chunks.json",
+        repo_source_dir=PROJECT_DIR / "data" / "source",
+        data_dir=data_dir,
         openai_api_key=api_key,
         openai_model=os.environ.get("OPENAI_MODEL", "gpt-4.1-mini").strip() or "gpt-4.1-mini",
-        # LLM вмикається лише коли є ключ і він не вимкнений прапорцем.
         use_llm=bool(api_key) and use_llm_flag,
-        top_k=top_k,
+        top_k=_int_env("RAG_TOP_K", 4, 1, 10),
+        llm_per_minute=_int_env("RAG_LLM_PER_MINUTE", 20, 1, 1000),
+        admin_username=os.environ.get("ADMIN_USERNAME", "admin").strip() or "admin",
+        admin_password=os.environ.get("ADMIN_PASSWORD", "").strip(),
     )
