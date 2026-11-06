@@ -79,7 +79,9 @@ def main() -> None:
     report(shutil.which("gh") is not None, "Встановлено GitHub CLI (gh)",
            "Потрібно лише для секретів GitHub: brew install gh")
     if shutil.which("gh"):
-        auth = subprocess.run(["gh", "auth", "status"], capture_output=True, text=True)
+        # `gh auth status` може повернути 0 і з недійсним токеном, тож питаємо API.
+        auth = subprocess.run(["gh", "api", "user", "--jq", ".login"],
+                              capture_output=True, text=True)
         report(auth.returncode == 0, "gh авторизовано в GitHub",
                "Виконайте: gh auth login (оберіть GitHub.com і HTTPS)")
 

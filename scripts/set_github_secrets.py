@@ -72,7 +72,8 @@ def main() -> None:
 
     if not shutil.which("gh"):
         raise SystemExit("Не знайдено gh. Встановіть: brew install gh, потім gh auth login")
-    auth = subprocess.run(["gh", "auth", "status"], capture_output=True, text=True)
+    auth = subprocess.run(["gh", "api", "user", "--jq", ".login"],
+                          capture_output=True, text=True)
     if auth.returncode != 0:
         raise SystemExit("gh не авторизовано. Виконайте: gh auth login  і повторіть запуск")
 
