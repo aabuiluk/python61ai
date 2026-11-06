@@ -1,0 +1,393 @@
+{
+ "source_files": [
+  "PythonAI_Author_Lesson45_Lesson46.html"
+ ],
+ "chunk_count": 77,
+ "chunks": [
+  {
+   "id": "pythonaiauth-000",
+   "path": "Пари 45–46 · Від LCEL до Tools і перевіреного workflow",
+   "text": "30 хв переходу з 43–44 + 100 хв пари 45 + 100 хв пари 46 = 230 навчальних хвилин. Це план повного практикуму, а не виміряна тривалість групового заняття. Перерви та встановлення поза цим часом. Якщо маєте дві пари по 80 хв, проведіть 30 хв переходу, по 65 хв основних тем; самостійні розширення, повторні live-запуски й захист звіту — у резерві.\nУ 43 ви обирали framework і розділяли model/chain/retrieval/agent. У 44 склали PromptTemplate → модель → parser і відокремили історії сесій. Тепер модельний вузол одразу викликає OpenAI API. На 45 він запитує Python-tools; на 46 маршрутизатор збирає обмежений процес і зупиняє пропозицію повернення коштів на перевірку людиною."
+  },
+  {
+   "id": "pythonaiauth-001",
+   "path": "Пари 45–46 · Від LCEL до Tools і перевіреного workflow",
+   "text": "Використовуємо синтетичні заявки T101 (urgent), T102 (normal), T103 (low). SLA відповідно 4, 24 та 72 години. Жодних справжніх клієнтських даних або платежів. Фінальний результат: live tool trace, usage.jsonl, workflow JSON та рішення approve/edit/reject. Усі приклади й заповнені завдання виконують реальні модельні запити. Без ключа скрипт завершиться зрозумілою помилкою; автоматичної заміни відповіді моделі на fixture немає."
+  },
+  {
+   "id": "pythonaiauth-002",
+   "path": "Пари 45–46 · Від LCEL до Tools і перевіреного workflow > Встановлення і ключ, який видає викладач",
+   "text": "Відкрийте [студентський репозиторій](https://github.com/aabuiluk/python61_ai) →\nCode → Download ZIP або виконайте git pull у своєму клоні. Пакет: PythonAI_Author_Lesson45_Lesson46. Перейдіть у цю папку в терміналі.\nПотрібен Python 3.10+, перевірка виконана на 3.11. Якщо спільне середовище вже є,\nвикористайте його. Інакше в корені репозиторію: python -m venv .venv.\nЗ кореня репозиторію Windows:\n.venv\\Scripts\\python -m pip install -r PythonAI_Author_Lesson45_Lesson46/requirements.txt. macOS/Linux: .venv/bin/python -m pip install -r PythonAI_Author_Lesson45_Lesson46/requirements.txt.\nУ папці пакета скопіюйте .env.example у .env:\nWindows Copy-Item .env.example .env; macOS/Linux cp .env.example .env. Відкрийте .env у редакторі й локально введіть виданий викладачем ключ у OPENAI_API_KEY. Не вставляйте ключ у HTML, комірку ноутбука, промпт або Git. .env та results/ виключені через .gitignore."
+  },
+  {
+   "id": "pythonaiauth-003",
+   "path": "Пари 45–46 · Від LCEL до Tools і перевіреного workflow > Встановлення і ключ, який видає викладач",
+   "text": "OPENAI_MODEL за замовчуванням gpt-4.1-mini. Якщо виданий проєкт не має доступу,\nвикладач задає доступну модель зі structured output і function calling. Код не перемикає модель мовчазно. Ключ API — це обліковий доступ; input/output tokens — одиниці обсягу запиту й відповіді. Це різні значення слова «токен».\nПерейдіть у папку пакета. Запуск: python examples/example_01.py, потім\npython tasks/task_01.py. Якщо середовище не активоване, замість python використайте шлях до Python зі свого середовища. Кожен файл має main-блок і не викликає API при імпорті.\nНоутбук: встановіть jupyterlab та ipykernel у це саме середовище,\nзапустіть python -m jupyterlab, відкрийте PythonAI_Author_Lesson45_Lesson46.ipynb. Якщо відкрили його з кореня репозиторію, перша комірка знайде папку пакета. Запускайте блоки по черзі: Run All надішле серію реальних запитів."
+  },
+  {
+   "id": "pythonaiauth-004",
+   "path": "Пари 45–46 · Від LCEL до Tools і перевіреного workflow > Встановлення і ключ, який видає викладач",
+   "text": "OpenAI API має власні квоти й білінг; підписка ChatGPT не замінює API-доступ. Кожен запуск прикладу або готового завдання може витрачати виділений бюджет. SDK має max_retries=0, timeout=30 с і max_output_tokens=800. Агент має максимум 4 модельні раунди та 6 tool calls; workflow — не більше одного repair. Це межі виконання й виводу, а не гарантована грошова стеля. Usage записуємо для кожного запиту.\n401: перевірте ключ; 403/404: доступ до моделі/проєкту; 429: квоту або частоту. Після помилки перевірте причину, а не натискайте запуск багато разів. Status incomplete, відмова та порожній текст не вважаються успішною відповіддю."
+  },
+  {
+   "id": "pythonaiauth-005",
+   "path": "Пари 45–46 · Від LCEL до Tools і перевіреного workflow > Файли й навігація",
+   "text": "У кожному блоці є пояснення → повний приклад → схема → «Зараз виконайте завдання» → підказки → «Готово, якщо» → точні файли examples/example_NN.py і tasks/task_NN.py. Студентська задача — практичний live-каркас із 1–2 TODO. Викладацька версія має готовий код, очікувані інваріанти, повний промпт та пояснення до нього. Текст відповіді моделі може змінюватися.\nruntime.py містить спільний клієнт API, реальні @tool, dispatcher та workflow. Не потрібно переписувати весь runtime перед першим запуском. Після базової вправи поглиблення — змінити потрібний контракт і додати власний локальний тест. HTML є читанкою з кодом; Python у ньому не виконується. Меню зліва закріплене при прокрутці."
+  },
+  {
+   "id": "pythonaiauth-006",
+   "path": "Пари 45–46 · Від LCEL до Tools і перевіреного workflow > Короткі команди підсумкової роботи",
+   "text": "```\npython runtime.py ask \"Який SLA у заявки T101?\"\npython runtime.py ask \"Підготуй пропозицію повернення коштів за заявкою T102\"\n```\nДруга команда надрукує шлях results/<request_id>.json. Скопіюйте цей реальний шлях у:\n```\npython runtime.py review results/ВСТАВТЕ_REQUEST_ID.json approve\npython runtime.py review results/ВСТАВТЕ_REQUEST_ID.json edit --answer \"Відредагована пропозиція для клієнта\"\npython runtime.py review results/ВСТАВТЕ_REQUEST_ID.json reject\n```\nДля одного стану оберіть лише одне рішення. Повторне схвалення завершеного стану відхиляється. Схвалення затверджує навчальну чернетку: код не відправляє повідомлень і не здійснює виплат. Це локальна послідовна вправа; для багатокористувацького сервісу потрібні авторизація, транзакційне сховище й контроль одночасних рішень."
+  },
+  {
+   "id": "pythonaiauth-007",
+   "path": "Пари 45–46 · Від LCEL до Tools і перевіреного workflow > Порядок роботи",
+   "text": "ХвилиниБлокЗавдання\n0–1543 → API · LCEL з реальною моделлю1\n15–3044 → API · Історія двох live-сесій2\n30–5545.1 · LangChain @tool і схема OpenAI3\n55–8045.2 · JSON-аргументи: parse → validate → dispatch4\n80–10545.3 · Справжній Function Calling: call_id та observation5\n105–13045.4 · ReAct-цикл: межі та помилки6\n130–15046.1 · Модельний router і локальна політика7\n150–17046.2 · Sequential workflow і незалежний validator8\n170–18546.3 · Repair і retry budget9\n185–20046.4 · HITL: зберегти стан і поставити паузу10\n200–21546.5 · Resume: approve, edit, reject11\n215–23046.6 · Повний workflow, журнал і захист12\nІмпорти студентської версії: PythonAI_Author_Lesson45_Lesson46.runtime. Відкрийте python61_ai як корінь проєкту та виберіть Python зі встановленими requirements-45-46.txt."
+  },
+  {
+   "id": "pythonaiauth-008",
+   "path": "Пари 45–46 · Від LCEL до Tools і перевіреного workflow > Порядок роботи",
+   "text": "```\nfrom pathlib import Path\nimport sys\npackage_relative = Path('PythonAI_Author_Lesson45_Lesson46')\ncandidates = [Path.cwd(), Path.cwd()/\"python61_ai\", Path.cwd()/\"lesson_helper\", *Path.cwd().parents]\nrepository = next((p for p in candidates if (p/package_relative/\"runtime.py\").is_file()), None)\nif repository is None:\n    raise RuntimeError(\"Відкрийте ноутбук із папки репозиторію або розпакуйте ZIP зі збереженням структури папок.\")\nsys.path.insert(0,str(repository.resolve()))\nfrom pathlib import Path\nimport json\nfrom PythonAI_Author_Lesson45_Lesson46.runtime import (ClassroomAPI, ClassroomError, API_TOOLS, TOOLS, TICKETS, SLA,\n    ANSWER_SCHEMA, ROUTE_SCHEMA, dispatch, validate, run_agent, route_query,\n    draft_for, repair_once, run_workflow, resume, show)\nfrom langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder\nfrom langchain_core.runnables import RunnableLambda\nfrom"
+  },
+  {
+   "id": "pythonaiauth-009",
+   "path": "Пари 45–46 · Від LCEL до Tools і перевіреного workflow > Порядок роботи",
+   "text": " langchain_core.messages import AIMessage\nfrom langchain_core.output_parsers import StrOutputParser\nfrom langchain_core.chat_history import InMemoryChatMessageHistory\nfrom langchain_core.runnables.history import RunnableWithMessageHistory\n```"
+  },
+  {
+   "id": "pythonaiauth-010",
+   "path": "Блок 1. 43 → API · LCEL з реальною моделлю",
+   "text": "0–15 хв.\nФакт 1. Модельний вузол LCEL можна замінити, зберігши контракт входу й виходу. У 43–44 ви відокремлювали prompt від моделі. Тепер ChatPromptTemplate формує повідомлення, RunnableLambda передає їх у ClassroomAPI.text, а StrOutputParser повертає рядок. Усередині виконується client.responses.create; це живий API-виклик, не симуляція. Ключ читається з локального .env пакета. Виводимо текст, фактичну модель та usage. Перевірте призначення кожного шару: шаблон не надсилає запит сам по собі, lambda тут викликає клієнт, parser не доводить істинність тексту. Перенесення бізнес-перевірок залишається вашою відповідальністю."
+  },
+  {
+   "id": "pythonaiauth-011",
+   "path": "Блок 1. 43 → API · LCEL з реальною моделлю > Приклад · реальний OpenAI API",
+   "text": "```\napi = ClassroomAPI()\nprompt = ChatPromptTemplate.from_messages([(\"system\",\"Поясніть початківцю одним реченням.\"),(\"human\",\"{question}\")])\nchain = prompt | RunnableLambda(api.text) | StrOutputParser()\nanswer = chain.invoke({\"question\":\"Навіщо parser після моделі?\"})\nshow(api,{\"answer\":answer})\n```"
+  },
+  {
+   "id": "pythonaiauth-012",
+   "path": "Блок 1. 43 → API · LCEL з реальною моделлю > Приклад · реальний OpenAI API > Повний промпт для OpenAI API",
+   "text": "```\nОдне коротке речення українською: чим chain відрізняється від agent? Не стверджуйте, що parser гарантує істинність.\n```\nПромпт передається через Python-клієнт, а не вручну через чат. Фактичні системні інструкції й JSON-схеми наведені в PROMPTS.md та runtime.py."
+  },
+  {
+   "id": "pythonaiauth-013",
+   "path": "Блок 1. 43 → API · LCEL з реальною моделлю > Приклад · реальний OpenAI API > Зараз виконайте завдання 1",
+   "text": "Після прикладу відкрийте tasks/task_01.py, допишіть TODO і запустіть. Для порівняння — examples/example_01.py. Це live-код із виданим ключем OpenAI. У ноутбуці використайте наступну комірку.\nЗавдання 1. Змініть питання на різницю chain та agent. Запустіть реальний LCEL і збережіть текст відповіді разом із model та usage. Перевірте, що відбувся один API-виклик."
+  },
+  {
+   "id": "pythonaiauth-014",
+   "path": "Блок 1. 43 → API · LCEL з реальною моделлю > Приклад · реальний OpenAI API > Підказки",
+   "text": "Скопіюйте структуру прикладу. 2. Замініть question. 3. Перевірте api.calls_used та api.records, не друкуйте ключ.\nГотово, якщо: Є непорожня live-відповідь, один API-виклик і запис фактичних model/usage.\nОкремі файли: examples/example_01.py і tasks/task_01.py у папці пакета.\n```\nQUESTION = None  # TODO: власне питання про chain та agent\nif not QUESTION:\n    raise NotImplementedError(\"Заповніть QUESTION\")\napi = ClassroomAPI()\nprompt = ChatPromptTemplate.from_messages([(\"system\",\"Одне речення українською.\"),(\"human\",\"{question}\")])\nchain = prompt | RunnableLambda(api.text) | StrOutputParser()\nshow(api,{\"answer\":chain.invoke({\"question\":QUESTION})})\n```"
+  },
+  {
+   "id": "pythonaiauth-015",
+   "path": "Блок 2. 44 → API · Історія двох live-сесій",
+   "text": "15–30 хв."
+  },
+  {
+   "id": "pythonaiauth-016",
+   "path": "Блок 2. 44 → API · Історія двох live-сесій",
+   "text": "15–30 хв.\nФакт 2. Модель бачить тільки ту історію, яку застосунок передав у поточному запиті. Зберігаємо реальний RunnableWithMessageHistory із 44, а його модельний вузол викликає OpenAI API. Сесія A отримує кодове слово, наступна репліка просить його повторити. Новий session_id B не має цих повідомлень. Перевіряємо і поведінку моделі, і склад сховища; лише правдоподібна відповідь не доводить ізоляцію. InMemoryChatMessageHistory існує в RAM поточного процесу. Store=False в API не підміняє локальне керування історією: потрібні messages, session_id та бюджет контексту. За нових запусків скрипта починаємо з порожнього store. Це місток до коду 44 на зафіксованій версії: RunnableWithMessageHistory та InMemoryChatMessageHistory уже позначені deprecated у цій лінійці LangChain. Попередження не є помилкою запуску. Для нових виробничих агентів перегляньте short-term memory та LangGraph persistence; у 46 ми"
+  },
+  {
+   "id": "pythonaiauth-017",
+   "path": "Блок 2. 44 → API · Історія двох live-сесій",
+   "text": " окремо зберігаємо стан workflow, а не покладаємось на RAM."
+  },
+  {
+   "id": "pythonaiauth-018",
+   "path": "Блок 2. 44 → API · Історія двох live-сесій > Приклад · реальний OpenAI API",
+   "text": "```\napi = ClassroomAPI()\nstore = {}\ndef history_for(sid):\n    return store.setdefault(sid,InMemoryChatMessageHistory())\nprompt = ChatPromptTemplate.from_messages([(\"system\",\"Працюйте тільки з історією цієї розмови.\"),MessagesPlaceholder(\"history\"),(\"human\",\"{question}\")])\nmodel = RunnableLambda(lambda value: AIMessage(content=api.text(value,stage=\"memory\")))\nchat = RunnableWithMessageHistory(prompt | model,history_for,input_messages_key=\"question\",history_messages_key=\"history\")\nchat.invoke({\"question\":\"Кодове слово нашої вправи — Клен.\"},config={\"configurable\":{\"session_id\":\"A\"}})\nanswer = chat.invoke({\"question\":\"Яке кодове слово я назвав?\"},config={\"configurable\":{\"session_id\":\"A\"}})\nshow(api,{\"answer\":answer.content,\"messages_A\":len(store[\"A\"].messages)})\n```"
+  },
+  {
+   "id": "pythonaiauth-019",
+   "path": "Блок 2. 44 → API · Історія двох live-сесій > Приклад · реальний OpenAI API > Повний промпт для OpenAI API",
+   "text": "```\nПрацюйте тільки з поточною історією. Якщо кодового слова там немає, так і скажіть. Не вгадуйте дані з іншої розмови.\n```\nПромпт передається через Python-клієнт, а не вручну через чат. Фактичні системні інструкції й JSON-схеми наведені в PROMPTS.md та runtime.py."
+  },
+  {
+   "id": "pythonaiauth-020",
+   "path": "Блок 2. 44 → API · Історія двох live-сесій > Приклад · реальний OpenAI API > Зараз виконайте завдання 2",
+   "text": "Після прикладу відкрийте tasks/task_02.py, допишіть TODO і запустіть. Для порівняння — examples/example_02.py. Це live-код із виданим ключем OpenAI. У ноутбуці використайте наступну комірку.\nЗавдання 2. Виконайте дві live-репліки в A й одну в B. В A використайте слово «Липа», у B попросіть повторити слово, якого B не отримувала. Перевірте довжини історій 4 та 2 і відсутність повідомлень A у B."
+  },
+  {
+   "id": "pythonaiauth-021",
+   "path": "Блок 2. 44 → API · Історія двох live-сесій > Приклад · реальний OpenAI API > Підказки",
+   "text": "Новий store. 2. Три invoke з двома session_id. 3. Не перевіряйте ізоляцію тільки за відповіддю моделі: перегляньте повідомлення.\nГотово, якщо: Три реальні запити; A має 4 повідомлення, B — 2; історія B не містить приватної репліки A.\nОкремі файли: examples/example_02.py і tasks/task_02.py у папці пакета."
+  },
+  {
+   "id": "pythonaiauth-022",
+   "path": "Блок 2. 44 → API · Історія двох live-сесій > Приклад · реальний OpenAI API > Підказки",
+   "text": "Окремі файли: examples/example_02.py і tasks/task_02.py у папці пакета.\n```\napi = ClassroomAPI()\nstore = {}\ndef history_for(sid):\n    return store.setdefault(sid,InMemoryChatMessageHistory())\nprompt = ChatPromptTemplate.from_messages([(\"system\",\"Відповідайте тільки з історії цієї сесії.\"),MessagesPlaceholder(\"history\"),(\"human\",\"{question}\")])\nmodel = RunnableLambda(lambda value: AIMessage(content=api.text(value,stage=\"memory\")))\nchat = RunnableWithMessageHistory(prompt | model,history_for,input_messages_key=\"question\",history_messages_key=\"history\")\nQUERIES = []  # TODO: три пари (session_id, question) для A/A/B\nif len(QUERIES)!=3:\n    raise NotImplementedError(\"Заповніть QUERIES\")\nfor sid,question in QUERIES:\n    answer = chat.invoke({\"question\":question},config={\"configurable\":{\"session_id\":sid}})\nshow(api,{\"answer\":answer.content,\"lengths\":{k:len(v.messages) for k,v in store.items()}})\n# TODO: перевірте 4/2 повідомлення та відсутність приватного тексту A"
+  },
+  {
+   "id": "pythonaiauth-023",
+   "path": "Блок 2. 44 → API · Історія двох live-сесій > Приклад · реальний OpenAI API > Підказки",
+   "text": " в B.\n```"
+  },
+  {
+   "id": "pythonaiauth-024",
+   "path": "Блок 3. 45.1 · LangChain @tool і схема OpenAI",
+   "text": "30–55 хв.\nФакт 3. Tool — це Python-функція, опис її призначення та схема аргументів. runtime.py оголошує lookup_ticket і get_sla через справжній декоратор @tool із langchain-core. Docstring пояснює, коли дія доречна, а type hints задають типи. convert_to_openai_function переносить цей контракт у function tool для Responses API. Назва й схема не надають моделі прямого доступу до Python: виконання відбудеться тільки через наш dispatcher. Strict schema допомагає формі аргументів, але не гарантує, що запит до обраного інструмента доречний або що заявка існує. У прикладі надсилаємо моделі самі схеми та просимо пояснити вибір. У наступних блоках виконаємо справжні function calls. Два read-only tools не змінюють заявки."
+  },
+  {
+   "id": "pythonaiauth-025",
+   "path": "Блок 3. 45.1 · LangChain @tool і схема OpenAI > Приклад · реальний OpenAI API",
+   "text": "```\napi = ClassroomAPI()\nprint(json.dumps(API_TOOLS,ensure_ascii=False,indent=2))\nanswer = api.text(\"Доступні схеми: \"+json.dumps(API_TOOLS)+\". Одним реченням поясніть: який tool спочатку потрібен для SLA T101 і чому?\",stage=\"tool_schema\")\nshow(api,{\"answer\":answer})\n```"
+  },
+  {
+   "id": "pythonaiauth-026",
+   "path": "Блок 3. 45.1 · LangChain @tool і схема OpenAI > Приклад · реальний OpenAI API > Повний промпт для OpenAI API",
+   "text": "```\nПоясніть lookup_ticket(ticket_id) і get_sla(priority): перша функція повертає фактичний пріоритет заявки, друга — години за цим пріоритетом. Не плутайте опис tool із виконанням.\n```\nПромпт передається через Python-клієнт, а не вручну через чат. Фактичні системні інструкції й JSON-схеми наведені в PROMPTS.md та runtime.py."
+  },
+  {
+   "id": "pythonaiauth-027",
+   "path": "Блок 3. 45.1 · LangChain @tool і схема OpenAI > Приклад · реальний OpenAI API > Зараз виконайте завдання 3",
+   "text": "Після прикладу відкрийте tasks/task_03.py, допишіть TODO і запустіть. Для порівняння — examples/example_03.py. Це live-код із виданим ключем OpenAI. У ноутбуці використайте наступну комірку.\nЗавдання 3. Відкрийте Python-функцію get_sla і її JSON-схему. Збережіть перелік дозволених priority. Надішліть реальний запит пояснити різницю lookup_ticket і get_sla. Зіставте пояснення зі схемами."
+  },
+  {
+   "id": "pythonaiauth-028",
+   "path": "Блок 3. 45.1 · LangChain @tool і схема OpenAI > Приклад · реальний OpenAI API > Підказки",
+   "text": "TOOLS[\"get_sla\"].args. 2. Literal задає три значення. 3. Пояснення моделі не є фактичним виконанням tool.\nГотово, якщо: Є реальна @tool-схема, enum urgent/normal/low, strict=True та live-пояснення без твердження, що tool уже виконано.\nОкремі файли: examples/example_03.py і tasks/task_03.py у папці пакета.\n```\napi = ClassroomAPI()\nTOOL_NAME = None  # TODO: get_sla\nif TOOL_NAME not in TOOLS:\n    raise NotImplementedError(\"Оберіть потрібний tool\")\nschema = next(t for t in API_TOOLS if t[\"name\"]==TOOL_NAME)\nshow(api,{\"schema\":schema,\"answer\":api.text(\"Поясніть цю схему: \"+json.dumps(schema),stage=\"tool_schema\")})\n```"
+  },
+  {
+   "id": "pythonaiauth-029",
+   "path": "Блок 4. 45.2 · JSON-аргументи: parse → validate → dispatch",
+   "text": "55–80 хв.\nФакт 4. Аргументи моделі проходять перевірку до Python-виклику. Зовнішній рядок спочатку читаємо json.loads, потім перевіряємо object, точний набір ключів, типи та дозволені значення. Не використовуємо eval або getattr для довільних назв. Dispatcher має allowlist із двох tools і повертає ok/data або ok/error. Невідомий tool, зайвий ключ, число замість рядка й відсутня заявка — різні негативні кейси. Приклад робить реальний API-запит на JSON-аргументи, після чого Python виконує dispatch. Це ще не повний function-calling протокол: у ньому також є call_id та function_call_output, які розберемо далі. Зберігайте цю різницю в назві свого результату."
+  },
+  {
+   "id": "pythonaiauth-030",
+   "path": "Блок 4. 45.2 · JSON-аргументи: parse → validate → dispatch > Приклад · реальний OpenAI API",
+   "text": "```\napi = ClassroomAPI()\nschema = {\"type\":\"object\",\"properties\":{\"priority\":{\"type\":\"string\",\"enum\":[\"urgent\",\"normal\",\"low\"]}},\"required\":[\"priority\"],\"additionalProperties\":False}\nargs = api.structured(\"Поверніть аргументи get_sla для priority urgent.\",schema=schema,stage=\"arguments\")\nobservation = dispatch(\"get_sla\",args)\nshow(api,{\"arguments\":args,\"observation\":observation})\n```"
+  },
+  {
+   "id": "pythonaiauth-031",
+   "path": "Блок 4. 45.2 · JSON-аргументи: parse → validate → dispatch > Приклад · реальний OpenAI API > Повний промпт для OpenAI API",
+   "text": "```\nПоверніть тільки аргументи get_sla для normal: JSON з одним ключем priority. Не додавайте tool name, годин чи пояснення.\n```\nПромпт передається через Python-клієнт, а не вручну через чат. Фактичні системні інструкції й JSON-схеми наведені в PROMPTS.md та runtime.py."
+  },
+  {
+   "id": "pythonaiauth-032",
+   "path": "Блок 4. 45.2 · JSON-аргументи: parse → validate → dispatch > Приклад · реальний OpenAI API > Зараз виконайте завдання 4",
+   "text": "Після прикладу відкрийте tasks/task_04.py, допишіть TODO і запустіть. Для порівняння — examples/example_04.py. Це live-код із виданим ключем OpenAI. У ноутбуці використайте наступну комірку.\nЗавдання 4. Отримайте від моделі аргументи для normal і виконайте get_sla. Локально перевірте unknown_tool, зламаний JSON та зайвий ключ. Виведіть різні error-коди; негативні тести не потребують додаткових API-запитів."
+  },
+  {
+   "id": "pythonaiauth-033",
+   "path": "Блок 4. 45.2 · JSON-аргументи: parse → validate → dispatch > Приклад · реальний OpenAI API > Підказки",
+   "text": "Schema та prompt задають normal. 2. Перевірте observation data.hours=24. 3. Викличте dispatch напряму для помилкових аргументів.\nГотово, якщо: Live-аргументи normal дали 24 години; три негативні кейси мають окремі error-коди.\nОкремі файли: examples/example_04.py і tasks/task_04.py у папці пакета.\n```\nPRIORITY = None  # TODO: normal\nif PRIORITY not in SLA:\n    raise NotImplementedError(\"Заповніть PRIORITY\")\napi = ClassroomAPI()\nschema = {\"type\":\"object\",\"properties\":{\"priority\":{\"type\":\"string\",\"enum\":list(SLA)}},\"required\":[\"priority\"],\"additionalProperties\":False}\nargs = api.structured(\"Аргументи get_sla для \"+PRIORITY,schema=schema,stage=\"arguments\")\nshow(api,{\"observation\":dispatch(\"get_sla\",args)})\n# TODO: додайте три негативні локальні перевірки.\n```"
+  },
+  {
+   "id": "pythonaiauth-034",
+   "path": "Блок 5. 45.3 · Справжній Function Calling: call_id та observation",
+   "text": "80–105 хв.\nФакт 5. Результат tool повертається моделі з тим самим call_id. Responses API може повернути output item type=function_call замість фінального тексту. У ньому є name, arguments та call_id. Застосунок виконує dispatch, додає попередні output items у діалог і надсилає function_call_output з відповідним call_id. Без цього модель не отримала підтвердженого observation, навіть якщо ви надрукували результат у консолі. runtime.run_agent реалізує саме цей цикл; історія передається явним input, store=False. Перевіряємо response.status перед використанням output; incomplete не приймаємо за успіх. У trace видно фактичні виклики й observation, а не вигадані «думки» моделі."
+  },
+  {
+   "id": "pythonaiauth-035",
+   "path": "Блок 5. 45.3 · Справжній Function Calling: call_id та observation > Приклад · реальний OpenAI API",
+   "text": "```\napi = ClassroomAPI()\nresult = run_agent(api,\"Який SLA у заявки T101? Спочатку перевір заявку, потім SLA.\")\nshow(api,result)\n```"
+  },
+  {
+   "id": "pythonaiauth-036",
+   "path": "Блок 5. 45.3 · Справжній Function Calling: call_id та observation > Приклад · реальний OpenAI API > Повний промпт для OpenAI API",
+   "text": "```\nЯкий SLA у заявки T102? Спочатку викличте lookup_ticket для T102; тільки після observation викличте get_sla за поверненим priority. Фінальний JSON має містити джерела з обох observation.\n```\nПромпт передається через Python-клієнт, а не вручну через чат. Фактичні системні інструкції й JSON-схеми наведені в PROMPTS.md та runtime.py."
+  },
+  {
+   "id": "pythonaiauth-037",
+   "path": "Блок 5. 45.3 · Справжній Function Calling: call_id та observation > Приклад · реальний OpenAI API > Зараз виконайте завдання 5",
+   "text": "Після прикладу відкрийте tasks/task_05.py, допишіть TODO і запустіть. Для порівняння — examples/example_05.py. Це live-код із виданим ключем OpenAI. У ноутбуці використайте наступну комірку.\nЗавдання 5. Виконайте live-цикл для T102. Перевірте наявність lookup_ticket і get_sla у trace, непорожні call_id та фінальний sla_hours=24. Перегляньте в runtime рядок function_call_output."
+  },
+  {
+   "id": "pythonaiauth-038",
+   "path": "Блок 5. 45.3 · Справжній Function Calling: call_id та observation > Приклад · реальний OpenAI API > Підказки",
+   "text": "run_agent(api,question). 2. Перевірте множину tool names. 3. Перевірте validate на фінальному draft.\nГотово, якщо: Є два реальні tool-виклики з call_id, observation і фінальний валідний SLA 24.\nОкремі файли: examples/example_05.py і tasks/task_05.py у папці пакета.\n```\nQUESTION = None  # TODO: запит про SLA T102 з вимогою перевірити ticket і policy\nif not QUESTION:\n    raise NotImplementedError(\"Заповніть QUESTION\")\napi = ClassroomAPI()\nresult = run_agent(api,QUESTION)\nshow(api,result)\n# TODO: перевірте tool names, call_id та validate.\n```"
+  },
+  {
+   "id": "pythonaiauth-039",
+   "path": "Блок 6. 45.4 · ReAct-цикл: межі та помилки",
+   "text": "105–130 хв.\nФакт 6. Кожний новий крок агента має бюджет і видимий результат попередньої дії. ReAct у практикумі — чергування рішення про дію, її виконання та observation. Не вимагаємо прихованої траси міркувань. Для T103 lookup_ticket поверне low, отже get_sla має отримати low й повернути 72 години. Бюджети max_rounds і max_tools — різні: одна відповідь моделі може запропонувати кілька tools. Перед виконанням усієї партії перевіряємо, чи не буде перевищено загальну межу. Якщо модель не завершила цикл, повертаємо явну помилку budget_exhausted. Не додаємо нескінченних повторів або «успішного» fallback із вигаданим текстом. Помилки tools є структурованими observation, помилки API — окремими діагностичними статусами."
+  },
+  {
+   "id": "pythonaiauth-040",
+   "path": "Блок 6. 45.4 · ReAct-цикл: межі та помилки > Приклад · реальний OpenAI API",
+   "text": "```\napi = ClassroomAPI(max_calls=4)\nresult = run_agent(api,\"Перевір SLA заявки T103 через ticket і policy.\",max_rounds=4,max_tools=4)\nshow(api,{\"result\":result,\"remaining_calls\":api.max_calls-api.calls_used})\n```"
+  },
+  {
+   "id": "pythonaiauth-041",
+   "path": "Блок 6. 45.4 · ReAct-цикл: межі та помилки > Приклад · реальний OpenAI API > Повний промпт для OpenAI API",
+   "text": "```\nДля T101 спочатку прочитайте заявку, потім SLA за її priority. Не повторюйте той самий tool без нових даних. Якщо немає достатніх даних, повідомте це; не вигадуйте observation.\n```\nПромпт передається через Python-клієнт, а не вручну через чат. Фактичні системні інструкції й JSON-схеми наведені в PROMPTS.md та runtime.py."
+  },
+  {
+   "id": "pythonaiauth-042",
+   "path": "Блок 6. 45.4 · ReAct-цикл: межі та помилки > Приклад · реальний OpenAI API > Зараз виконайте завдання 6",
+   "text": "Після прикладу відкрийте tasks/task_06.py, допишіть TODO і запустіть. Для порівняння — examples/example_06.py. Це live-код із виданим ключем OpenAI. У ноутбуці використайте наступну комірку.\nЗавдання 6. Запустіть T101 з max_rounds=4, max_tools=4. Перевірте SLA=4 і бюджет api.calls_used<=4. Окремо без мережі перевірте, що max_rounds=0 відхиляється. Поясніть різницю бюджету tools та модельних викликів."
+  },
+  {
+   "id": "pythonaiauth-043",
+   "path": "Блок 6. 45.4 · ReAct-цикл: межі та помилки > Приклад · реальний OpenAI API > Підказки",
+   "text": "Невалідні межі відхиляються до запиту. 2. Не провокуйте зайві платні помилки для тесту. 3. Перегляньте rounds і tool_count.\nГотово, якщо: Live-цикл дав SLA 4, бюджети дотримані, нульовий max_rounds відхилено локально.\nОкремі файли: examples/example_06.py і tasks/task_06.py у папці пакета.\n```\napi = ClassroomAPI(max_calls=4)\nQUESTION = None  # TODO: T101, ticket -> policy\nif not QUESTION:\n    raise NotImplementedError(\"Заповніть QUESTION\")\nresult = run_agent(api,QUESTION,max_rounds=4,max_tools=4)\nshow(api,result)\n# TODO: assert для SLA й бюджету.\n```"
+  },
+  {
+   "id": "pythonaiauth-044",
+   "path": "Блок 7. 46.1 · Модельний router і локальна політика",
+   "text": "130–150 хв.\nФакт 7. Класифікація моделі обирає маршрут, але не скасовує обов’язкову перевірку людиною. Router повертає route з enum support/refund/unknown та коротку reason. Після JSON код перевіряє enum. Запити про повернення чи компенсацію мають локальну політику review: навіть помилковий route від LLM не може перетворити їх на автоматичну дію. Короткий reason допомагає пояснити вибір, але не є прихованим chain-of-thought. Для складної предметної області словникового правила недостатньо: тут воно явно обмежене навчальними формулюваннями українською та refund англійською. Зміна маршруту впливає на наступні кроки, тому журналюємо route окремим stage."
+  },
+  {
+   "id": "pythonaiauth-045",
+   "path": "Блок 7. 46.1 · Модельний router і локальна політика > Приклад · реальний OpenAI API",
+   "text": "```\napi = ClassroomAPI()\nrouted = route_query(api,\"Підготуй пропозицію повернення коштів за T102\")\nshow(api,routed)\n```"
+  },
+  {
+   "id": "pythonaiauth-046",
+   "path": "Блок 7. 46.1 · Модельний router і локальна політика > Приклад · реальний OpenAI API > Повний промпт для OpenAI API",
+   "text": "```\nОберіть route: support для SLA заявки; refund для повернення коштів; unknown для нерелевантного питання. Поверніть route і коротку reason. Не виконуйте бізнес-дій.\n```\nПромпт передається через Python-клієнт, а не вручну через чат. Фактичні системні інструкції й JSON-схеми наведені в PROMPTS.md та runtime.py."
+  },
+  {
+   "id": "pythonaiauth-047",
+   "path": "Блок 7. 46.1 · Модельний router і локальна політика > Приклад · реальний OpenAI API > Зараз виконайте завдання 7",
+   "text": "Після прикладу відкрийте tasks/task_07.py, допишіть TODO і запустіть. Для порівняння — examples/example_07.py. Це live-код із виданим ключем OpenAI. У ноутбуці використайте наступну комірку.\nЗавдання 7. Класифікуйте три запити: SLA T101; повернення коштів T102; рецепт борщу. Перевірте support/refund/unknown. Для refund поясніть роль локального правила; усі три запити мають бути справжніми API-викликами."
+  },
+  {
+   "id": "pythonaiauth-048",
+   "path": "Блок 7. 46.1 · Модельний router і локальна політика > Приклад · реальний OpenAI API > Підказки",
+   "text": "route_query по одному питанню. 2. Порівняйте enum. 3. Невдалу класифікацію збережіть, не підміняйте результат.\nГотово, якщо: Три live-маршрути й записи usage; refund зберігає обов’язковий review.\nОкремі файли: examples/example_07.py і tasks/task_07.py у папці пакета.\n```\napi = ClassroomAPI()\nQUERIES = []  # TODO: три запити support/refund/unknown\nif len(QUERIES)!=3:\n    raise NotImplementedError(\"Додайте три запити\")\nroutes = [route_query(api,q) for q in QUERIES]\nshow(api,routes)\n# TODO: перевірте три маршрути.\n```"
+  },
+  {
+   "id": "pythonaiauth-049",
+   "path": "Блок 8. 46.2 · Sequential workflow і незалежний validator",
+   "text": "150–170 хв.\nФакт 8. Послідовність generate → validate має явний контракт на межі кожного кроку. Чернетка містить answer, ticket_id, sla_hours, needs_human, sources. Structured Output контролює форму JSON, але Python звіряє SLA з локальною таблицею, перевіряє id та джерела. Validator повертає ok і список reasons. Неправильне число не виправляється мовчазно. Текст answer може ще потребувати змістовного перегляду: правильні структуровані поля не гарантують відсутність суперечностей у вільному реченні. Для зовнішніх дій додавайте предметні перевірки та review; у цій вправі ніяких зовнішніх змін немає. Використайте результати перевірки як дані наступного вузла, а не просто print у консолі."
+  },
+  {
+   "id": "pythonaiauth-050",
+   "path": "Блок 8. 46.2 · Sequential workflow і незалежний validator > Приклад · реальний OpenAI API",
+   "text": "```\napi = ClassroomAPI()\nquestion = \"Який SLA у заявки T102?\"\ndraft = draft_for(api,question,\"support\")\ncheck = validate(draft,question,\"support\")\nshow(api,{\"draft\":draft,\"validation\":check})\n```"
+  },
+  {
+   "id": "pythonaiauth-051",
+   "path": "Блок 8. 46.2 · Sequential workflow і незалежний validator > Приклад · реальний OpenAI API > Повний промпт для OpenAI API",
+   "text": "```\nФакти: T103 має priority low; SLA low — 72 години. Поверніть answer, ticket_id=T103, sla_hours=72, needs_human=false, sources з ticket:T103 та sla:low. Не змінюйте факти.\n```\nПромпт передається через Python-клієнт, а не вручну через чат. Фактичні системні інструкції й JSON-схеми наведені в PROMPTS.md та runtime.py."
+  },
+  {
+   "id": "pythonaiauth-052",
+   "path": "Блок 8. 46.2 · Sequential workflow і незалежний validator > Приклад · реальний OpenAI API > Зараз виконайте завдання 8",
+   "text": "Після прикладу відкрийте tasks/task_08.py, допишіть TODO і запустіть. Для порівняння — examples/example_08.py. Це live-код із виданим ключем OpenAI. У ноутбуці використайте наступну комірку.\nЗавдання 8. Отримайте live-чернетку для T103 та перевірте SLA=72. У копії чернетки локально змініть sla_hours на 1, а потім sources на невідомий id. Перевірте wrong_sla й unknown_or_duplicate_source."
+  },
+  {
+   "id": "pythonaiauth-053",
+   "path": "Блок 8. 46.2 · Sequential workflow і незалежний validator > Приклад · реальний OpenAI API > Підказки",
+   "text": "Не змінюйте оригінальний live-вивід. 2. Робіть копії словника. 3. Негативні перевірки без мережі.\nГотово, якщо: Є live-чернетка T103/72, валідний контракт і два незалежні негативні кейси.\nОкремі файли: examples/example_08.py і tasks/task_08.py у папці пакета.\n```\napi = ClassroomAPI()\nQUESTION = None  # TODO: T103\nif not QUESTION:\n    raise NotImplementedError(\"Заповніть QUESTION\")\ndraft = draft_for(api,QUESTION,\"support\")\nshow(api,{\"draft\":draft,\"check\":validate(draft,QUESTION)})\n# TODO: дві локальні копії з помилками SLA та source.\n```"
+  },
+  {
+   "id": "pythonaiauth-054",
+   "path": "Блок 9. 46.3 · Repair і retry budget",
+   "text": "170–185 хв.\nФакт 9. Повтор через помилку мережі та виправлення змісту — різні механізми. SDK max_retries=0 прибирає приховані повтори транспорту. Бізнес-етап repair отримує чернетку, перевірені джерела й конкретні reasons, виконує один новий модельний запит і знову проходить validator. Якщо друга версія неправильна, workflow має rejected, а не нескінченний цикл. Кількість repair і calls_used записуються в стан. Щоб гарантовано побачити цей шлях, приклад починається з навмисно хибного числа в локальній навчальній чернетці. Це дефектний вхід для досліду; виправлена відповідь далі отримується справжнім OpenAI API, без підстановки готового результату."
+  },
+  {
+   "id": "pythonaiauth-055",
+   "path": "Блок 9. 46.3 · Repair і retry budget > Приклад · реальний OpenAI API",
+   "text": "```\napi = ClassroomAPI()\nquestion = \"Який SLA у заявки T101?\"\nbroken = {\"answer\":\"Термін 99 годин\",\"ticket_id\":\"T101\",\"sla_hours\":99,\"needs_human\":False,\"sources\":[\"ticket:T101\",\"sla:urgent\"]}\ncheck = validate(broken,question)\nfixed,final_check = repair_once(api,question,broken,check,\"support\")\nshow(api,{\"before\":check,\"after\":fixed,\"validation\":final_check})\n```"
+  },
+  {
+   "id": "pythonaiauth-056",
+   "path": "Блок 9. 46.3 · Repair і retry budget > Приклад · реальний OpenAI API > Повний промпт для OpenAI API",
+   "text": "```\nВиправте чернетку T102/SLA=5 за перевіреними фактами: T102 normal, SLA normal 24. Поверніть п’ять полів за схемою. Не додавайте нових джерел. Python повторно перевірить результат.\n```\nПромпт передається через Python-клієнт, а не вручну через чат. Фактичні системні інструкції й JSON-схеми наведені в PROMPTS.md та runtime.py."
+  },
+  {
+   "id": "pythonaiauth-057",
+   "path": "Блок 9. 46.3 · Repair і retry budget > Приклад · реальний OpenAI API > Зараз виконайте завдання 9",
+   "text": "Після прикладу відкрийте tasks/task_09.py, допишіть TODO і запустіть. Для порівняння — examples/example_09.py. Це live-код із виданим ключем OpenAI. У ноутбуці використайте наступну комірку.\nЗавдання 9. Створіть навмисно хибну чернетку T102 з SLA=5, виконайте один live-repair і перевірте\nПеревірте calls_used=1. Якщо repair не пройшов, збережіть rejected та reasons, не запускайте нескінченний повтор."
+  },
+  {
+   "id": "pythonaiauth-058",
+   "path": "Блок 9. 46.3 · Repair і retry budget > Приклад · реальний OpenAI API > Підказки",
+   "text": "Початкова помилка є локальним тестовим входом. 2. repair_once робить один запит. 3. Обов’язкова повторна validate.\nГотово, якщо: Один реальний repair, повторна перевірка й SLA=24; лічильник викликів показано.\nОкремі файли: examples/example_09.py і tasks/task_09.py у папці пакета.\n```\napi = ClassroomAPI()\nBROKEN_SLA = None  # TODO: неправильне число для T102\nif type(BROKEN_SLA) is not int or BROKEN_SLA==24:\n    raise NotImplementedError(\"Задайте навмисно неправильний SLA\")\nquestion = \"Який SLA у заявки T102?\"\nbroken = {\"answer\":\"Навмисна помилка\",\"ticket_id\":\"T102\",\"sla_hours\":BROKEN_SLA,\"needs_human\":False,\"sources\":[\"ticket:T102\",\"sla:normal\"]}\nfixed,check = repair_once(api,question,broken,validate(broken,question),\"support\")\nshow(api,{\"fixed\":fixed,\"check\":check})\n```"
+  },
+  {
+   "id": "pythonaiauth-059",
+   "path": "Блок 10. 46.4 · HITL: зберегти стан і поставити паузу",
+   "text": "185–200 хв.\nФакт 10. Пауза для людини — збережений стан, з якого можна продовжити пізніше. Для запиту про повернення коштів workflow виконує live-router і live-draft, перевіряє контракт і записує JSON зі status=paused_for_human. Є request_id, revision, question, route, draft, validation, trace, model і calls_used. Так людина бачить не лише кнопку «ок», а перевірювану пропозицію та її походження. Модель не отримує tool виплати. Навіть якщо текст користувача наказує «вже поверни», локальна політика зберігає паузу. external_action_executed=false явно позначає, що зовнішньої дії не було. Зберігайте файл до рішення: стан має пережити завершення скрипта."
+  },
+  {
+   "id": "pythonaiauth-060",
+   "path": "Блок 10. 46.4 · HITL: зберегти стан і поставити паузу > Приклад · реальний OpenAI API",
+   "text": "```\napi = ClassroomAPI()\nstate,path = run_workflow(api,\"Підготуй пропозицію повернення коштів за T102\")\nshow(api,{\"state\":state,\"review_file\":str(path)})\n```"
+  },
+  {
+   "id": "pythonaiauth-061",
+   "path": "Блок 10. 46.4 · HITL: зберегти стан і поставити паузу > Приклад · реальний OpenAI API > Повний промпт для OpenAI API",
+   "text": "```\nПідготуйте пропозицію повернення коштів за T101 для розгляду людиною. Не повідомляйте, що виплату виконано. needs_human=true, sla_hours=null; фактичної дії немає.\n```\nПромпт передається через Python-клієнт, а не вручну через чат. Фактичні системні інструкції й JSON-схеми наведені в PROMPTS.md та runtime.py."
+  },
+  {
+   "id": "pythonaiauth-062",
+   "path": "Блок 10. 46.4 · HITL: зберегти стан і поставити паузу > Приклад · реальний OpenAI API > Зараз виконайте завдання 10",
+   "text": "Після прикладу відкрийте tasks/task_10.py, допишіть TODO і запустіть. Для порівняння — examples/example_10.py. Це live-код із виданим ключем OpenAI. У ноутбуці використайте наступну комірку.\nЗавдання 10. Створіть live-пропозицію повернення за T101. Перевірте paused_for_human, revision=1, існування файла та external_action_executed=false. Прочитайте JSON заново з диска й звірте request_id."
+  },
+  {
+   "id": "pythonaiauth-063",
+   "path": "Блок 10. 46.4 · HITL: зберегти стан і поставити паузу > Приклад · реальний OpenAI API > Підказки",
+   "text": "run_workflow робить реальні запити. 2. Файл має бути в results/. 3. Пока не викликайте approve.\nГотово, якщо: Два або більше live-виклики, файл стану з паузою, ревізією та відсутністю зовнішньої дії.\nОкремі файли: examples/example_10.py і tasks/task_10.py у папці пакета.\n```\napi = ClassroomAPI()\nQUESTION = None  # TODO: пропозиція повернення за T101\nif not QUESTION:\n    raise NotImplementedError(\"Заповніть QUESTION\")\nstate,path = run_workflow(api,QUESTION)\nshow(api,{\"state\":state,\"path\":str(path)})\n# TODO: прочитайте файл і перевірте pause/revision/external_action_executed.\n```"
+  },
+  {
+   "id": "pythonaiauth-064",
+   "path": "Блок 11. 46.5 · Resume: approve, edit, reject",
+   "text": "200–215 хв.\nФакт 11. Рішення людини також має правила переходу та повторну валідацію. Після paused_for_human можна approve, edit або reject. Edit змінює текст answer, не довільні id чи SLA. Перед фінальним статусом знову виконується validate. Ревізія збільшується; повторне рішення для того самого завершеного файла відхиляється. Це локальна послідовна демонстрація, а не готовий сервіс із транзакційним блокуванням. Для справжньої команди review потрібні авторизація, журнал рецензента й захист від одночасного схвалення. Тут усі приклади працюють тільки з навчальними файлами. Схвалення затверджує чернетку, але не запускає платіж чи надсилання повідомлення."
+  },
+  {
+   "id": "pythonaiauth-065",
+   "path": "Блок 11. 46.5 · Resume: approve, edit, reject > Приклад · реальний OpenAI API",
+   "text": "```\napi = ClassroomAPI()\nstate,path = run_workflow(api,\"Підготуй пропозицію повернення коштів за T102\")\nreviewed = resume(path,\"edit\",edited_answer=\"Пропозицію передано на розгляд; повернення коштів ще не виконувалось.\")\nshow(api,{\"reviewed\":reviewed})\n```"
+  },
+  {
+   "id": "pythonaiauth-066",
+   "path": "Блок 11. 46.5 · Resume: approve, edit, reject > Приклад · реальний OpenAI API > Повний промпт для OpenAI API",
+   "text": "```\nПідготуйте чернетку пропозиції повернення T103. Потрібен review людини; не стверджуйте, що виплату виконано. Не намагайтеся схвалити власну пропозицію.\n```\nПромпт передається через Python-клієнт, а не вручну через чат. Фактичні системні інструкції й JSON-схеми наведені в PROMPTS.md та runtime.py."
+  },
+  {
+   "id": "pythonaiauth-067",
+   "path": "Блок 11. 46.5 · Resume: approve, edit, reject > Приклад · реальний OpenAI API > Зараз виконайте завдання 11",
+   "text": "Після прикладу відкрийте tasks/task_11.py, допишіть TODO і запустіть. Для порівняння — examples/example_11.py. Це live-код із виданим ключем OpenAI. У ноутбуці використайте наступну комірку.\nЗавдання 11. Згенеруйте live-чернетку T103 для повернення, відхиліть її через resume(...,\"reject\"). Перевірте status=rejected і revision=2. Повторний approve цього самого файла має завершитися ClassroomError без нового API-виклику."
+  },
+  {
+   "id": "pythonaiauth-068",
+   "path": "Блок 11. 46.5 · Resume: approve, edit, reject > Приклад · реальний OpenAI API > Підказки",
+   "text": "Спершу має бути paused_for_human. 2. Збережіть calls_used до review. 3. Повторний виклик обгорніть try/except.\nГотово, якщо: Є live-походження чернетки, відхилення з revision=2 і заблокований повторний approve без додаткового API-запиту.\nОкремі файли: examples/example_11.py і tasks/task_11.py у папці пакета.\n```\napi = ClassroomAPI()\nstate,path = run_workflow(api,\"Підготуй пропозицію повернення коштів за T103\")\nDECISION = None  # TODO: reject\nif DECISION not in {\"approve\",\"edit\",\"reject\"}:\n    raise NotImplementedError(\"Оберіть рішення\")\nreviewed = resume(path,DECISION)\nshow(api,reviewed)\n# TODO: перевірте revision та заблокуйте повторний review.\n```"
+  },
+  {
+   "id": "pythonaiauth-069",
+   "path": "Блок 12. 46.6 · Повний workflow, журнал і захист",
+   "text": "215–230 хв.\nФакт 12. Завершення workflow доводиться станом, перевірками та журналом викликів. Підсумок: route → tools/draft → validate → до одного repair → completed або paused_for_human/rejected. Клієнт моделі є залежністю ClassroomAPI, а не копією SDK-коду в кожному вузлі. Це дозволяє тестувати транспорт локально, не підміняючи live-режим навчальних прикладів. Дані про model, status, usage та latency потрапляють у usage.jsonl. Ключі не записуються, текст заявки не потрібний у транспортному журналі. Ви маєте показати живий tool trace і файл review, а локальні негативні тести позначити окремо. Зелений транспортний тест не є фактично виконаним живим запитом. Exit ticket: хто виконав дію; як перевірено факт; де межа повторів; який статус очікує людину? Де перечитати: блоки 5, 8, 9, 10–11."
+  },
+  {
+   "id": "pythonaiauth-070",
+   "path": "Блок 12. 46.6 · Повний workflow, журнал і захист > Приклад · реальний OpenAI API",
+   "text": "```\napi = ClassroomAPI(max_calls=8)\nstate,path = run_workflow(api,\"Який SLA у заявки T101? Перевірте через інструменти.\")\nshow(api,{\"state\":state,\"saved_to\":str(path)})\n```"
+  },
+  {
+   "id": "pythonaiauth-071",
+   "path": "Блок 12. 46.6 · Повний workflow, журнал і захист > Приклад · реальний OpenAI API > Повний промпт для OpenAI API",
+   "text": "```\nЯкий SLA у заявки T102? Використайте lookup_ticket та get_sla, поверніть перевірювані поля й source ids. Не виконуйте жодної зовнішньої дії.\n```\nПромпт передається через Python-клієнт, а не вручну через чат. Фактичні системні інструкції й JSON-схеми наведені в PROMPTS.md та runtime.py."
+  },
+  {
+   "id": "pythonaiauth-072",
+   "path": "Блок 12. 46.6 · Повний workflow, журнал і захист > Приклад · реальний OpenAI API > Зараз виконайте завдання 12",
+   "text": "Після прикладу відкрийте tasks/task_12.py, допишіть TODO і запустіть. Для порівняння — examples/example_12.py. Це live-код із виданим ключем OpenAI. У ноутбуці використайте наступну комірку.\nЗавдання 12. Запустіть повний live-workflow для SLA T102. Перевірте completed, SLA=24, validation.ok та наявність tools у trace. Збережіть REPORT.md: question, model, call count, usage, валідація, межі та відмінність від запиту про повернення. Не включайте ключ."
+  },
+  {
+   "id": "pythonaiauth-073",
+   "path": "Блок 12. 46.6 · Повний workflow, журнал і захист > Приклад · реальний OpenAI API > Підказки",
+   "text": "max_calls=8 не гарантує певної ціни, але обмежує виклики. 2. completed не означає, що відбулась зовнішня дія. 3. Файл звіту зберігайте в results/.\nГотово, якщо: Повний live-цикл completed/T102/24, tool trace, usage та REPORT.md без ключа; refund-маршрут відмежовано.\nОкремі файли: examples/example_12.py і tasks/task_12.py у папці пакета.\n```\napi = ClassroomAPI(max_calls=8)\nQUESTION = None  # TODO: SLA T102 з перевіркою tools\nif not QUESTION:\n    raise NotImplementedError(\"Заповніть QUESTION\")\nstate,path = run_workflow(api,QUESTION)\nshow(api,{\"state\":state,\"path\":str(path)})\n# TODO: перевірки completed, SLA, trace та власний REPORT.md.\n```"
+  },
+  {
+   "id": "pythonaiauth-074",
+   "path": "Що здати",
+   "text": "Заповнені tasks, JSON-файли двох workflow (SLA та refund), один завершений review, usage.jsonl і REPORT.md. Перед здачею переконайтеся, що .env і ключа в архіві немає. У звіті відокремте фактичні live-запуски від локальних негативних кейсів."
+  },
+  {
+   "id": "pythonaiauth-075",
+   "path": "Що здати > Домашня практика і резерв",
+   "text": "Додайте заявку T104 та тест її priority. Додайте новий read-only tool із точною схемою, allowlist і негативним тестом аргументів. Перевірте, що модель його використала, а повернення коштів як і раніше очікує людину. Поглиблення: зобразіть workflow як граф, не змінюючи його станів і бюджетів. Нові платні запуски виконуйте в межах виданого доступу."
+  },
+  {
+   "id": "pythonaiauth-076",
+   "path": "Що здати > Офіційні джерела",
+   "text": "[OpenAI: Function Calling](https://developers.openai.com/api/docs/guides/function-calling)\n[OpenAI: Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)\n[OpenAI: Responses API](https://developers.openai.com/api/reference/responses/overview)\n[OpenAI: керування ключами](https://platform.openai.com/api-keys)\n[LangChain: tools](https://docs.langchain.com/oss/python/langchain/tools)\n[LangChain: RunnableWithMessageHistory](https://reference.langchain.com/python/langchain-core/runnables/history/RunnableWithMessageHistory)\nПрограму звірено з наданими HTML 43–46. Код підготовлено 06.11.2026. Модель задається через OPENAI_MODEL, фактична версія відповіді записується в журнал."
+  }
+ ]
+}

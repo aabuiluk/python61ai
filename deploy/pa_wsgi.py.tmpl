@@ -1,0 +1,18 @@
+# ==========================================================================
+# WSGI-файл PythonAnywhere. ЦЕЙ ФАЙЛ СТВОРЮЄТЬСЯ АВТОМАТИЧНО.
+#
+# scripts/deploy_pa.py бере цей шаблон, підставляє шлях до проєкту і
+# записує результат у /var/www/<домен>_wsgi.py на PythonAnywhere.
+# Не редагуйте файл на сервері: зміни робіть у репозиторії і деплойте знову.
+# ==========================================================================
+
+import sys
+
+# Папка з кодом застосунку на сервері (її створює deploy_pa.py).
+PROJECT_DIR = "{project_dir}"
+
+if PROJECT_DIR not in sys.path:
+    sys.path.insert(0, PROJECT_DIR)
+
+# PythonAnywhere шукає змінну з назвою `application`.
+from app import application  # noqa: E402,F401

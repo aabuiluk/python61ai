@@ -1,0 +1,67 @@
+# ==========================================================================
+# Автодеплой на PythonAnywhere після кожного пуша в main.
+#
+# Як це працює:
+#   1. Ви робите git push у main (або мердж PR у main).
+#   2. GitHub запускає цей файл.
+#   3. Спершу тести; якщо вони падають — деплою НЕМАЄ.
+#   4. Потім scripts/deploy_pa.py завантажує код на PythonAnywhere через API
+#      і перезапускає сайт.
+#
+# Секрети (PA_USERNAME, PA_API_TOKEN, ...) беруться з GitHub Secrets. У цьому
+# файлі їх немає: сам файл є публічним у репозиторії, тож секретів тут бути не має.
+# Щоб записати секрети, запустіть локально: python scripts/set_github_secrets.py
+# (детально — docs/SETUP.md, крок 6).
+# ==========================================================================
+
+name: Deploy to PythonAnywhere
+
+on:
+  push:
+    branches:
+      - main          # будь-який пуш у main запускає деплой
+  workflow_dispatch:  # ручний запуск з вкладки Actions → Run workflow
+
+# Не даємо двом деплоям іти одночасно: другий чекає першого.
+concurrency:
+  group: deploy-pythonanywhere
+  cancel-in-progress: false
+
+permissions:
+  contents: read      # деплою потрібен лише перегляд коду
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Отримати код
+        uses: actions/checkout@v4
+
+      - name: Встановити Python 3.10 (як на PythonAnywhere)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Запустити тести
+        run: python -m unittest discover -s tests -t . -v
+
+      - name: Перевірити, що індекс уроку актуальний
+        # Якщо хтось змінив HTML-урок, але не перебудував індекс — зупиняємо деплой.
+        run: |
+          cp data/chunks.json /tmp/chunks_before.json
+          python -m rag.build
+          if ! cmp -s data/chunks.json /tmp/chunks_before.json; then
+            echo "data/chunks.json не відповідає HTML-уроку. Запустіть: python -m rag.build і закомітьте результат."
+            exit 1
+          fi
+
+      - name: Викласти на PythonAnywhere
+        env:
+          PA_USERNAME: ${{ secrets.PA_USERNAME }}
+          PA_API_TOKEN: ${{ secrets.PA_API_TOKEN }}
+          PA_DOMAIN: ${{ secrets.PA_DOMAIN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+        run: python scripts/deploy_pa.py
