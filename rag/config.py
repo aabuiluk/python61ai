@@ -21,6 +21,29 @@ from typing import Optional
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 
 
+def shared_env_file() -> Path:
+    """Єдиний .env для всіх копій репозиторію (основної і git worktree).
+
+    Git worktree (папка гілки в .claude/worktrees/...) має свій корінь, тож
+    .env у ньому відрізняється від .env основної папки. Тому беремо .env
+    з кореня ОСНОВНОГО репозиторію (git common dir). Якщо його немає —
+    використовуємо .env поруч із кодом.
+    """
+    import subprocess
+
+    try:
+        common = subprocess.run(
+            ["git", "rev-parse", "--path-format=absolute", "--git-common-dir"],
+            cwd=PROJECT_DIR, capture_output=True, text=True, check=True,
+        ).stdout.strip()
+        main_env = Path(common).parent / ".env"
+        if main_env.is_file():
+            return main_env
+    except (OSError, subprocess.CalledProcessError):
+        pass
+    return PROJECT_DIR / ".env"
+
+
 def load_env_file(path: Path) -> int:
     """Завантажує пари KEY=VALUE з файлу в os.environ. Повертає кількість."""
     if not path.is_file():

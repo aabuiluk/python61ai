@@ -23,7 +23,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from pa_api import PAError, PythonAnywhereClient  # noqa: E402
-from rag.config import load_env_file  # noqa: E402
+from rag.config import load_env_file, shared_env_file  # noqa: E402
 from rag.netutil import ssl_context  # noqa: E402
 
 results = []
@@ -42,7 +42,7 @@ def main() -> None:
     report(sys.version_info >= (3, 10), f"Python {sys.version.split()[0]} (потрібен 3.10+)",
            "Встановіть новіший Python з python.org або через pyenv/brew")
 
-    env_file = ROOT / ".env"
+    env_file = shared_env_file()
     report(env_file.is_file(), "Файл .env існує",
            "Скопіюйте .env.example у .env і заповніть значення (див. docs/SETUP.md, крок 2)")
     load_env_file(env_file)

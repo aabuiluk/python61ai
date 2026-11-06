@@ -28,14 +28,14 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from pa_api import PAError, PythonAnywhereClient  # noqa: E402
-from rag.config import load_env_file  # noqa: E402
+from rag.config import load_env_file, shared_env_file  # noqa: E402
 
 # Файли поза папкою, які входили в старий сайт (знайдено в домашній папці).
 EXTRA_OLD_FILES = ["lesson_helper_extract.sh"]
 
 
 def main() -> None:
-    load_env_file(ROOT / ".env")
+    load_env_file(shared_env_file())
     parser = argparse.ArgumentParser(description="Прибирання старого сайту на PythonAnywhere")
     parser.add_argument("--yes", action="store_true",
                         help="справді видалити (без цього прапорця — лише перелік)")

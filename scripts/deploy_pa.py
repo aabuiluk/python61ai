@@ -40,7 +40,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 from pa_api import PAError, PythonAnywhereClient  # noqa: E402
-from rag.config import load_env_file  # noqa: E402
+from rag.config import load_env_file, shared_env_file  # noqa: E402
 from rag.netutil import ssl_context  # noqa: E402
 
 # Що саме їде на сервер. Тести, документація й папка data/source на сервер не потрібні.
@@ -110,7 +110,7 @@ def check_admin(domain: str) -> str:
 
 
 def main() -> None:
-    load_env_file(ROOT / ".env")
+    load_env_file(shared_env_file())
     parser = argparse.ArgumentParser(description="Деплой RAG на PythonAnywhere")
     parser.add_argument("--dry-run", action="store_true",
                         help="показати план, нічого не змінювати на сервері")

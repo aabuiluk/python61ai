@@ -28,7 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from rag.config import load_env_file  # noqa: E402
+from rag.config import load_env_file, shared_env_file  # noqa: E402
 
 # Імена, які піднімаємо в GitHub. Порожні значення пропускаються.
 SECRET_NAMES = [
@@ -54,7 +54,7 @@ def repo_from_origin() -> str:
 
 
 def main() -> None:
-    load_env_file(ROOT / ".env")
+    load_env_file(shared_env_file())
     parser = argparse.ArgumentParser(description="Секрети .env -> GitHub Actions")
     parser.add_argument("--repo", default=None, help="owner/name (за замовчуванням з origin)")
     parser.add_argument("--dry-run", action="store_true", help="лише показати імена")
