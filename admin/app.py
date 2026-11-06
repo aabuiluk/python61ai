@@ -37,6 +37,8 @@ security = HTTPBasic(auto_error=False)
 
 
 def build_admin(runtime: Runtime) -> FastAPI:
+    # ВАЖЛИВО: усі маршрути і залежності — `async def`. На PythonAnywhere (uWSGI
+    # без потоків) синхронні функції FastAPI йдуть у пул потоків і зависають.
     app = FastAPI(title="Адмінка бота", docs_url=None, redoc_url=None,
                   openapi_url=None)
     password = runtime.settings.admin_password
@@ -46,7 +48,7 @@ def build_admin(runtime: Runtime) -> FastAPI:
 
     # --- доступ ------------------------------------------------------------
 
-    def require_admin(credentials: Optional[HTTPBasicCredentials] = Depends(security)):
+    async def require_admin(credentials: Optional[HTTPBasicCredentials] = Depends(security)):
         if not password:
             raise _plain(503, "ADMIN_PASSWORD не задано в .env — адмінка вимкнена")
         ok_user = credentials is not None and secrets.compare_digest(
@@ -113,7 +115,7 @@ form.inline{{display:inline}}
     # --- дашборд -----------------------------------------------------------
 
     @app.get("/admin", response_class=HTMLResponse)
-    def dashboard(request: Request, _user: str = Depends(require_admin)):
+    async def dashboard(request: Request, _user: str = Depends(require_admin)):
         s = runtime.store.stats(days=14)
         eff = runtime.effective()
         cards = "".join(
@@ -160,7 +162,7 @@ form.inline{{display:inline}}
         return "".join(rows) or "<tr><td colspan=7>Порожньо</td></tr>"
 
     @app.get("/admin/questions", response_class=HTMLResponse)
-    def questions(request: Request, _user: str = Depends(require_admin)):
+    async def questions(request: Request, _user: str = Depends(require_admin)):
         items = runtime.store.list_questions(limit=200)
         body = ("<table><tr><th>№</th><th>Час (UTC)</th><th>Питання</th><th>Режим</th>"
                 "<th>Оцінка</th><th>Розглянуто</th><th></th></tr>"
@@ -168,7 +170,7 @@ form.inline{{display:inline}}
         return layout("Журнал питань", body, request.query_params.get("msg", ""))
 
     @app.get("/admin/review", response_class=HTMLResponse)
-    def review(request: Request, _user: str = Depends(require_admin)):
+    async def review(request: Request, _user: str = Depends(require_admin)):
         items = runtime.store.list_questions(limit=200, only_review=True)
         body = ("<p class='muted'>Тут питання без відповіді в конспекті або з 👎. "
                 "Напишіть відповідь — бот віддаватиме її на це саме питання.</p>"
@@ -178,7 +180,7 @@ form.inline{{display:inline}}
         return layout("Перевірка людиною", body, request.query_params.get("msg", ""))
 
     @app.get("/admin/questions/{question_id}", response_class=HTMLResponse)
-    def question_detail(question_id: int, request: Request, _user: str = Depends(require_admin)):
+    async def question_detail(question_id: int, request: Request, _user: str = Depends(require_admin)):
         q = runtime.store.get_question(question_id)
         if not q:
             raise _plain(404, "Питання не знайдено")
@@ -203,7 +205,7 @@ form.inline{{display:inline}}
         return layout(f"Питання №{question_id}", body, request.query_params.get("msg", ""))
 
     @app.post("/admin/questions/{question_id}/answer")
-    def save_answer(question_id: int, answer: str = Form(...), csrf: str = Form(""),
+    async def save_answer(question_id: int, answer: str = Form(...), csrf: str = Form(""),
                     _user: str = Depends(require_admin)):
         check_csrf(csrf)
         q = runtime.store.get_question(question_id)
@@ -218,7 +220,7 @@ form.inline{{display:inline}}
         return back("Відповідь збережено: бот віддаватиме її на це питання", "/admin/review")
 
     @app.post("/admin/questions/{question_id}/reviewed")
-    def mark_reviewed(question_id: int, csrf: str = Form(""), _user: str = Depends(require_admin)):
+    async def mark_reviewed(question_id: int, csrf: str = Form(""), _user: str = Depends(require_admin)):
         check_csrf(csrf)
         runtime.store.mark_reviewed(question_id)
         return back("Позначено розглянутим", "/admin/review")
@@ -226,7 +228,7 @@ form.inline{{display:inline}}
     # --- відповіді викладача -----------------------------------------------
 
     @app.get("/admin/overrides", response_class=HTMLResponse)
-    def overrides(request: Request, _user: str = Depends(require_admin)):
+    async def overrides(request: Request, _user: str = Depends(require_admin)):
         rows = "".join(
             f"<tr><td>{html.escape(o['question'])}</td><td>{html.escape(o['answer'])}</td>"
             f"<td>{o['updated_at']}</td><td>"
@@ -239,7 +241,7 @@ form.inline{{display:inline}}
         return layout("Відповіді викладача", body, request.query_params.get("msg", ""))
 
     @app.post("/admin/overrides/delete")
-    def delete_override(norm: str = Form(...), csrf: str = Form(""),
+    async def delete_override(norm: str = Form(...), csrf: str = Form(""),
                         _user: str = Depends(require_admin)):
         check_csrf(csrf)
         runtime.store.delete_override(norm)
@@ -248,7 +250,7 @@ form.inline{{display:inline}}
     # --- файли і індекс ----------------------------------------------------
 
     @app.get("/admin/files", response_class=HTMLResponse)
-    def files(request: Request, _user: str = Depends(require_admin)):
+    async def files(request: Request, _user: str = Depends(require_admin)):
         repo = runtime.settings.repo_source_dir
         repo_names = {p.name for p in repo.glob("*.html")} if repo.is_dir() else set()
         uploaded = {p.name for p in runtime.sources_dir.glob("*.html")} \
@@ -298,7 +300,7 @@ form.inline{{display:inline}}
         return back(f"Файл {name} збережено. Натисніть «Перебудувати індекс».", "/admin/files")
 
     @app.post("/admin/files/delete")
-    def delete_file(name: str = Form(...), csrf: str = Form(""), _user: str = Depends(require_admin)):
+    async def delete_file(name: str = Form(...), csrf: str = Form(""), _user: str = Depends(require_admin)):
         check_csrf(csrf)
         if not FILENAME_RE.match(name):
             return back("Некоректна назва", "/admin/files")
@@ -309,7 +311,7 @@ form.inline{{display:inline}}
         return back("Такого завантаженого файлу немає (репозиторні уроки не видаляються)", "/admin/files")
 
     @app.post("/admin/index/rebuild")
-    def rebuild(csrf: str = Form(""), _user: str = Depends(require_admin)):
+    async def rebuild(csrf: str = Form(""), _user: str = Depends(require_admin)):
         check_csrf(csrf)
         try:
             count = runtime.rebuild_index()
@@ -320,7 +322,7 @@ form.inline{{display:inline}}
     # --- налаштування -------------------------------------------------------
 
     @app.get("/admin/settings", response_class=HTMLResponse)
-    def settings_page(request: Request, _user: str = Depends(require_admin)):
+    async def settings_page(request: Request, _user: str = Depends(require_admin)):
         eff = runtime.effective()
         body = f"""
 <form method="post" action="/admin/settings">
@@ -343,7 +345,7 @@ form.inline{{display:inline}}
         return layout("Налаштування", body, request.query_params.get("msg", ""))
 
     @app.post("/admin/settings")
-    def save_settings(top_k: int = Form(4), openai_model: str = Form("gpt-4.1-mini"),
+    async def save_settings(top_k: int = Form(4), openai_model: str = Form("gpt-4.1-mini"),
                       llm_per_minute: int = Form(20), use_llm: str = Form(""),
                       public_enabled: str = Form(""), csrf: str = Form(""),
                       _user: str = Depends(require_admin)):
