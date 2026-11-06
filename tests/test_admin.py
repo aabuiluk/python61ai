@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import base64
+import io
 import re
 import tempfile
 import unittest
@@ -96,10 +97,9 @@ class AdminTests(unittest.TestCase):
         before = self.runtime.chunk_count
         html = "<h1>Новий урок</h1><p>Тестовий матеріал про дедлайн T900.</p>".encode("utf-8")
         response = self.client.post(
-            "/admin/files/upload", headers=self.auth,
-            data={"csrf": self.csrf()},
-            files={"file": ("lesson_99.html", html, "text/html")},
-            follow_redirects=False)
+            "/admin/files/upload?name=lesson_99.html", headers={
+                **self.auth, "X-CSRF": self.csrf(), "Content-Type": "application/octet-stream"},
+            content=html, follow_redirects=False)
         self.assertEqual(response.status_code, 303)
         self.assertTrue((self.runtime.sources_dir / "lesson_99.html").is_file())
         count = self.client.post("/admin/index/rebuild", headers=self.auth,
@@ -110,12 +110,28 @@ class AdminTests(unittest.TestCase):
 
     def test_upload_rejects_bad_name(self):
         response = self.client.post(
-            "/admin/files/upload", headers=self.auth, data={"csrf": self.csrf()},
-            files={"file": ("../evil.html", b"<p>x</p>", "text/html")},
-            follow_redirects=False)
+            "/admin/files/upload?name=../evil.html", headers={
+                **self.auth, "X-CSRF": self.csrf(), "Content-Type": "application/octet-stream"},
+            content=b"<p>x</p>", follow_redirects=False)
         self.assertEqual(response.status_code, 303)
         self.assertFalse((self.runtime.sources_dir.parent / "evil.html").exists())
         self.assertFalse(self.runtime.sources_dir.exists() and any(self.runtime.sources_dir.iterdir()))
+
+    def test_wsgi_bridge_serves_admin_without_threads(self):
+        from rag.asgi_bridge import asgi_to_wsgi
+        wsgi = asgi_to_wsgi(build_admin(self.runtime))
+        captured = {}
+
+        def start_response(status, headers):
+            captured["status"] = status
+
+        environ = {"REQUEST_METHOD": "GET", "PATH_INFO": "/admin", "QUERY_STRING": "",
+                   "CONTENT_LENGTH": "", "wsgi.input": io.BytesIO(b""),
+                   "wsgi.url_scheme": "https", "SERVER_NAME": "t", "SERVER_PORT": "443",
+                   "HTTP_AUTHORIZATION": self.auth["Authorization"]}
+        body = b"".join(wsgi(environ, start_response))
+        self.assertTrue(captured["status"].startswith("200"))
+        self.assertIn("Дашборд".encode("utf-8"), body)
 
     def test_repo_lesson_is_listed(self):
         page = self.client.get("/admin/files", headers=self.auth).text

@@ -3,7 +3,7 @@
 PythonAnywhere (через deploy/pa_wsgi.py.tmpl) шукає змінну `application`.
 
 Диспетчер:
-- /admin и /admin/...  -> адмінка (FastAPI через a2wsgi), якщо її вдалося підняти;
+- /admin и /admin/...  -> адмінка (FastAPI через rag/asgi_bridge.py), якщо її вдалося підняти;
 - усе інше              -> публічний бот.
 Якщо FastAPI не встановлено, /admin відповідає 503, а бот працює далі.
 
@@ -26,10 +26,10 @@ _public_app = create_app(runtime)
 _admin_app = None
 _admin_error = ""
 try:
-    from a2wsgi import ASGIMiddleware
     from admin.app import build_admin
+    from rag.asgi_bridge import asgi_to_wsgi
 
-    _admin_app = ASGIMiddleware(build_admin(runtime))
+    _admin_app = asgi_to_wsgi(build_admin(runtime))
 except Exception as exc:  # noqa: BLE001 — адмінка не має ламати бота
     _admin_error = f"Адмінку не запущено: {exc.__class__.__name__}. Перевірте venv на сервері."
 

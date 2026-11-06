@@ -24,7 +24,7 @@ import secrets
 from typing import Optional
 from urllib.parse import quote
 
-from fastapi import Depends, FastAPI, Form, Request, UploadFile
+from fastapi import Depends, FastAPI, Form, Header, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
@@ -270,11 +270,20 @@ form.inline{{display:inline}}
 <h2 style="font-size:17px">Завантажити HTML-урок</h2>
 <p class="muted">Файл має бути в UTF-8, до 3 МБ, назва латиницею (наприклад lesson_47.html).
 Після завантаження натисніть «Перебудувати індекс», щоб бот почав користуватися новим матеріалом.</p>
-<form method="post" action="/admin/files/upload" enctype="multipart/form-data">
-{csrf_field()}
-<input type="file" name="file" accept=".html,text/html" required>
-<button type="submit">Завантажити</button>
-</form>
+<input type="file" id="upfile" accept=".html,text/html">
+<button type="button" id="upbtn">Завантажити</button>
+<script>
+document.getElementById("upbtn").addEventListener("click", async () => {{
+  const file = document.getElementById("upfile").files[0];
+  if (!file) {{ alert("Оберіть файл"); return; }}
+  const response = await fetch("/admin/files/upload?name=" + encodeURIComponent(file.name), {{
+    method: "POST",
+    headers: {{"Content-Type": "application/octet-stream", "X-CSRF": "{csrf_token}"}},
+    body: file
+  }});
+  location.href = response.redirected ? response.url : "/admin/files";
+}});
+</script>
 <h2 style="font-size:17px">Індекс</h2>
 <p>Фрагментів зараз: <b>{runtime.chunk_count}</b></p>
 <form method="post" action="/admin/index/rebuild">{csrf_field()}
@@ -283,12 +292,21 @@ form.inline{{display:inline}}
         return layout("Файли і індекс", body, request.query_params.get("msg", ""))
 
     @app.post("/admin/files/upload")
-    async def upload(file: UploadFile, csrf: str = Form(""), _user: str = Depends(require_admin)):
-        check_csrf(csrf)
-        name = (file.filename or "").strip()
+    async def upload(request: Request, name: str = "", x_csrf: str = Header(""),
+                     _user: str = Depends(require_admin)):
+        # Файл приходить сирим тілом (без multipart): starlette для multipart
+        # використовує потоки, а на PythonAnywhere їх немає.
+        check_csrf(x_csrf)
+        name = name.strip()
         if not FILENAME_RE.match(name):
             return back("Назва файлу має бути латиницею, наприклад lesson_47.html", "/admin/files")
-        content = await file.read(MAX_UPLOAD_BYTES + 1)
+        try:
+            declared = int(request.headers.get("content-length") or 0)
+        except ValueError:
+            declared = 0
+        if declared > MAX_UPLOAD_BYTES:
+            return back("Файл більший за 3 МБ", "/admin/files")
+        content = await request.body()
         if len(content) > MAX_UPLOAD_BYTES:
             return back("Файл більший за 3 МБ", "/admin/files")
         try:
