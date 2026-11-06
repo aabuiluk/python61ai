@@ -129,8 +129,9 @@ PAGE = """<!doctype html>
           padding:16px; margin:12px 0; }
   .answer { white-space:pre-wrap; }
   .source { font-size:14px; }
+  .source p { white-space:pre-wrap; margin:6px 0 0; line-height:1.5; }
   .source pre { white-space:pre-wrap; background:transparent; margin:6px 0 0;
-                font-family:inherit; font-size:14px; line-height:1.5; }
+                font-family:ui-monospace,Menlo,monospace; font-size:13px; line-height:1.5; }
   .badge { font-size:13px; color:var(--accent); }
   .feedback button { background:transparent; color:var(--fg); border:1px solid var(--line); padding:6px 12px; font-size:14px; margin-right:6px; }
   .feedback button.on { border-color:var(--accent); color:var(--accent); }
@@ -164,6 +165,23 @@ function el(tag, text, cls) {
   if (cls) node.className = cls;
   node.textContent = text;   // textContent: нічого з відповіді не виконується як HTML
   return node;
+}
+
+// Текст фрагмента: рядки з "```" — межі блоку коду (їх не показуємо), між ними — <pre>.
+function sourceParts(text) {
+  const parts = [];
+  let inCode = false;
+  let buffer = [];
+  const flush = () => {
+    if (buffer.length) parts.push(el(inCode ? "pre" : "p", buffer.join("\\n")));
+    buffer = [];
+  };
+  for (const line of text.split("\\n")) {
+    if (line.trim() === "```") { flush(); inCode = !inCode; }
+    else buffer.push(line);
+  }
+  flush();
+  return parts;
 }
 
 function feedbackRow(questionId) {
@@ -213,7 +231,7 @@ form.addEventListener("submit", async (event) => {
     for (const source of data.sources || []) {
       const box = el("div", "", "card source");
       box.append(el("strong", source.path + "  (релевантність " + source.score + ")"));
-      box.append(el("pre", source.text));
+      box.append(...sourceParts(source.text));
       result.append(box);
     }
     result.append(feedbackRow(data.question_id));
